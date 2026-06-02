@@ -1,94 +1,52 @@
-const express = require('express');
-const mongoose = require('mongoose');
-const cors = require('cors');
-const http = require('http');
-const socketIo = require('socket.io');
-const passport = require('passport');
-require('dotenv').config();
+import dotenv from "dotenv";
+dotenv.config();
 
-const connectDB = require('./config/db');
-const errorHandler = require('./middleware/errorHandler');
-const rateLimiter = require('./middleware/rateLimiter');
+import express from "express";
+import cors from "cors";
+import connectDB from "./config/db.js";
 
-// Route imports
-const authRoutes = require('./routes/auth');
-const journalRoutes = require('./routes/journal');
-const taskRoutes = require('./routes/tasks');
-const goalRoutes = require('./routes/goals');
-const insightRoutes = require('./routes/insights');
-const aiRoutes = require('./routes/ai');
-const travelRoutes = require('./routes/travel');
-const notesRoutes = require('./routes/notes');
-const mocktestRoutes = require('./routes/mocktest');
-const notificationRoutes = require('./routes/notifications');
-const onboardingRoutes = require('./routes/onboarding');
-const foodRoutes = require('./routes/food');
-
-// Cron jobs
-require('./jobs/taskChecker');
-require('./jobs/notificationSender');
-require('./jobs/habitAnalyzer');
+// All routes
+import authRoutes from "./routes/auth.js";
+import journalRoutes from "./routes/journal.js";
+import aiRoutes from "./routes/ai.js";
+import notesRoutes from "./routes/notes.js";
+import testsRoutes from "./routes/tests.js";
+import doubtsRoutes from "./routes/doubts.js";
+import chatRoutes from "./routes/chat.js";
+import notificationRoutes from "./routes/notifications.js";
+import travelRoutes from "./routes/travel.js";  // 🆕 IMPORTANT
 
 const app = express();
-const server = http.createServer(app);
+const PORT = process.env.PORT || 5000;
 
-const io = socketIo(server, {
-  cors: {
-    origin: process.env.FRONTEND_URL || 'http://localhost:3000',
-    methods: ['GET', 'POST']
-  }
-});
+app.use(cors({
+  origin: ["http://localhost:5173", "http://localhost:5174", "http://localhost:5175"],
+  credentials: true,
+}));
+app.use(express.json({ limit: "10mb" }));
 
-// Connect DB
 connectDB();
 
-// Middleware
-app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
-  credentials: true
-}));
-app.use(express.json({ limit: '50mb' }));
-app.use(express.urlencoded({ extended: true, limit: '50mb' }));
-app.use(passport.initialize());
-require('./config/passport')(passport);
+// Health check
+app.get("/", (req, res) => res.json({ message: "🚀 API Running!" }));
 
-// Rate limiting
-app.use('/api/', rateLimiter);
+// API Routes
+app.use("/api/auth", authRoutes);
+app.use("/api/journal", journalRoutes);
+app.use("/api/ai", aiRoutes);
+app.use("/api/notes", notesRoutes);
+app.use("/api/tests", testsRoutes);
+app.use("/api/doubts", doubtsRoutes);
+app.use("/api/chat", chatRoutes);
+app.use("/api/notifications", notificationRoutes);
+app.use("/api/travel", travelRoutes);  // 🆕 ADD THIS
 
-// Socket.io
-global.io = io;
-io.on('connection', (socket) => {
-  console.log('Client connected:', socket.id);
-  
-  socket.on('join', (userId) => {
-    socket.join(userId);
-    console.log(`User ${userId} joined their room`);
-  });
-
-  socket.on('disconnect', () => {
-    console.log('Client disconnected:', socket.id);
-  });
+// Error handler
+app.use((err, req, res, next) => {
+  console.error("❌ Error:", err.stack);
+  res.status(500).json({ error: err.message });
 });
 
-// Routes
-app.use('/api/auth', authRoutes);
-app.use('/api/journal', journalRoutes);
-app.use('/api/tasks', taskRoutes);
-app.use('/api/goals', goalRoutes);
-app.use('/api/insights', insightRoutes);
-app.use('/api/ai', aiRoutes);
-app.use('/api/travel', travelRoutes);
-app.use('/api/notes', notesRoutes);
-app.use('/api/mocktest', mocktestRoutes);
-app.use('/api/notifications', notificationRoutes);
-app.use('/api/onboarding', onboardingRoutes);
-app.use('/api/food', foodRoutes);
-
-app.get('/health', (req, res) => res.json({ status: 'OK', timestamp: new Date() }));
-
-app.use(errorHandler);
-
-const PORT = process.env.PORT || 5000;
-server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
-
-module.exports = { app, io };
+app.listen(PORT, () => {
+  console.log(`✅ Server running on http://localhost:${PORT}`);
+});

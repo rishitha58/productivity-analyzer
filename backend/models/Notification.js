@@ -1,42 +1,40 @@
-const mongoose = require('mongoose');
+import mongoose from "mongoose";
 
 const notificationSchema = new mongoose.Schema({
-  user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    required: true,
+  },
+  type: {
+    type: String,
+    enum: ["task", "sleep", "wakeup", "undone", "achievement", "reminder", "info"],
+    required: true,
+  },
   title: { type: String, required: true },
   message: { type: String, required: true },
-  type: { 
-    type: String, 
-    enum: ['task', 'goal', 'habit', 'travel', 'sleep', 'food', 'insight', 'system', 'alarm'],
-    default: 'system'
-  },
-  priority: { type: String, enum: ['low', 'medium', 'high', 'urgent'], default: 'medium' },
+  emoji: { type: String, default: "🔔" },
+  priority: { type: String, enum: ["low", "medium", "high"], default: "medium" },
+  
+  // Optional links
+  actionUrl: String, // Where to go when clicked
+  actionLabel: String, // Button text
+  
+  // Related data
+  taskId: String,
+  
+  // Status
+  read: { type: Boolean, default: false },
+  shown: { type: Boolean, default: false }, // Browser notification shown
   
   // Scheduling
-  scheduledFor: Date,
-  sent: { type: Boolean, default: false },
-  sentAt: Date,
-  
-  // Reference
-  referenceId: String,
-  referenceModel: String,
-  
-  // Travel specific
-  travelDetails: {
-    destination: String,
-    departureTime: String,
-    travelDuration: Number,
-    route: String,
-  },
-  
-  read: { type: Boolean, default: false },
-  readAt: Date,
-  
-  actionUrl: String,
+  scheduledFor: Date, // When to trigger
+  triggered: { type: Boolean, default: false },
   
   createdAt: { type: Date, default: Date.now },
 });
 
-notificationSchema.index({ user: 1, sent: 1, scheduledFor: 1 });
-notificationSchema.index({ user: 1, read: 1 });
+notificationSchema.index({ userId: 1, createdAt: -1 });
+notificationSchema.index({ userId: 1, read: 1 });
 
-module.exports = mongoose.model('Notification', notificationSchema);
+export default mongoose.model("Notification", notificationSchema);

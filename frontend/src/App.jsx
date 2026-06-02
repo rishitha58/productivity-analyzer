@@ -1,122 +1,101 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
-import './App.css'
+import { Routes, Route, Navigate } from "react-router-dom";
+import { AnimatePresence } from "framer-motion";
 
-function App() {
-  const [count, setCount] = useState(0)
+// ─── Pages ───
+import AuthPage from "./pages/AuthPage";
+import Dashboard from "./pages/Dashboard";
+import JournalPage from "./pages/JournalPage";
+import StudyFocusPage from "./pages/StudyFocusPage";
+import NotesPage from "./pages/NotesPage";
+import ImportantPointsPage from "./pages/ImportantPointsPage";
+import MockTestsPage from "./pages/MockTestsPage";
+import MistakesPage from "./pages/MistakesPage";
+import InsightsPage from "./pages/InsightsPage";
+import GoalsPage from "./pages/GoalsPage";
+import TaskHistoryPage from "./pages/TaskHistoryPage";
+import AIChatPage from "./pages/AIChatPage";
+import NotificationsPage from "./pages/NotificationsPage";
+import TravelPage from "./pages/TravelPage";              
+import PlaceholderPage from "./pages/PlaceholderPage";
 
+// ─── Components ───
+import ChatWidget from "./components/ChatWidget";
+import FloatingStudyWidget from "./components/study/FloatingStudyWidget"; // ⭐ NEW
+
+// ═══════════════════════════════════════
+//   PROTECTED ROUTE
+// ═══════════════════════════════════════
+const ProtectedRoute = ({ children }) => {
+  const token = localStorage.getItem("token");
+  if (!token) return <Navigate to="/" replace />;
+  return children;
+};
+
+// ═══════════════════════════════════════
+//   REQUIRE TODAY'S JOURNAL
+// ═══════════════════════════════════════
+const RequireJournal = ({ children }) => {
+  const token = localStorage.getItem("token");
+  if (!token) return <Navigate to="/" replace />;
+
+  const today = new Date().toISOString().split("T")[0];
+  const lastJournal = localStorage.getItem("lastJournalDate");
+
+  if (lastJournal !== today) {
+    return <Navigate to="/journal" replace />;
+  }
+
+  return children;
+};
+
+// ═══════════════════════════════════════
+//   APP
+// ═══════════════════════════════════════
+const App = () => {
   return (
     <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
+      <AnimatePresence mode="wait">
+        <Routes>
+          <Route path="/" element={<AuthPage />} />
+          <Route path="/journal" element={<ProtectedRoute><JournalPage /></ProtectedRoute>} />
+          <Route path="/dashboard" element={<RequireJournal><Dashboard /></RequireJournal>} />
+          <Route path="/focus/:taskId" element={<ProtectedRoute><StudyFocusPage /></ProtectedRoute>} />
+          <Route path="/notes" element={<ProtectedRoute><NotesPage /></ProtectedRoute>} />
+          <Route path="/important" element={<ProtectedRoute><ImportantPointsPage /></ProtectedRoute>} />
+          <Route path="/mocktests" element={<ProtectedRoute><MockTestsPage /></ProtectedRoute>} />
+          <Route path="/mistakes" element={<ProtectedRoute><MistakesPage /></ProtectedRoute>} />
+          <Route path="/insights" element={<ProtectedRoute><InsightsPage /></ProtectedRoute>} />
+          <Route path="/goals" element={<ProtectedRoute><GoalsPage /></ProtectedRoute>} />
+          <Route path="/history" element={<ProtectedRoute><TaskHistoryPage /></ProtectedRoute>} />
+          <Route path="/ai" element={<ProtectedRoute><AIChatPage /></ProtectedRoute>} />
+          <Route path="/notifications" element={<ProtectedRoute><NotificationsPage /></ProtectedRoute>} />
+          <Route path="/travel" element={<ProtectedRoute><TravelPage /></ProtectedRoute>} />
 
-      <div className="ticks"></div>
+          <Route path="/tasks" element={<ProtectedRoute><PlaceholderPage title="All Tasks" emoji="✅" description="View and manage all your tasks across days" /></ProtectedRoute>} />
+          <Route path="/study" element={<ProtectedRoute><PlaceholderPage title="Study Mode" emoji="🎓" description="Click a study task on dashboard to enter focus mode" /></ProtectedRoute>} />
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
+          <Route path="*" element={
+            <div className="min-h-screen bg-cream flex items-center justify-center px-6">
+              <div className="text-center">
+                <div className="text-8xl mb-4">🌸</div>
+                <h1 className="text-5xl font-bold text-gray-700 font-display mb-2">404</h1>
+                <p className="text-gray-400 mb-6">Page not found</p>
+                <a href="/dashboard" className="inline-block px-6 py-3 bg-lavender-300 text-white rounded-2xl font-semibold shadow-soft hover:bg-lavender-400 transition">
+                  ← Back to Dashboard
+                </a>
+              </div>
+            </div>
+          } />
+        </Routes>
+      </AnimatePresence>
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
+      {/* 🤖 Global Chat Widget */}
+      <ChatWidget />
+
+      {/* ⭐ NEW: Floating Study Timer (shows when in study mode, not on focus page) */}
+      <FloatingStudyWidget />
     </>
-  )
-}
+  );
+};
 
-export default App
+export default App;
