@@ -85,6 +85,52 @@ export const regenerateRoadmap = async () => {
   });
   return handleResponse(res);
 };
+// ═══════════════════════════════════════
+//   ✏️ UPDATE GOAL
+// ═══════════════════════════════════════
+export const updateGoal = async (goal, duration, regenerateRoadmap = false) => {
+  const res = await fetch(`${API_URL}/auth/goal`, {
+    method: "PATCH",
+    headers: getAuthHeaders(),
+    body: JSON.stringify({ goal, duration, regenerateRoadmap }),
+  });
+  return handleResponse(res);
+};
+
+// ═══════════════════════════════════════
+//   ➕ CREATE GOAL (for users who skipped)
+// ═══════════════════════════════════════
+export const createGoal = async (goal, duration) => {
+  const res = await fetch(`${API_URL}/auth/create-goal`, {
+    method: "POST",
+    headers: getAuthHeaders(),
+    body: JSON.stringify({ goal, duration }),
+  });
+  return handleResponse(res);
+};
+
+// ═══════════════════════════════════════
+//   🗑️ DELETE GOAL
+// ═══════════════════════════════════════
+export const deleteGoal = async () => {
+  const res = await fetch(`${API_URL}/auth/goal`, {
+    method: "DELETE",
+    headers: getAuthHeaders(),
+  });
+  return handleResponse(res);
+};
+
+// ═══════════════════════════════════════
+//   ✏️ EDIT PHASE
+// ═══════════════════════════════════════
+export const editPhase = async (phaseIndex, data) => {
+  const res = await fetch(`${API_URL}/auth/phase-edit/${phaseIndex}`, {
+    method: "PATCH",
+    headers: getAuthHeaders(),
+    body: JSON.stringify(data),
+  });
+  return handleResponse(res);
+};
 
 // ═══════════════════════════════════════
 //   JOURNAL
