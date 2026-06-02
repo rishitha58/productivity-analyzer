@@ -8,7 +8,10 @@ export const StudyModeProvider = ({ children }) => {
   const [currentMusic, setCurrentMusic] = useState('lofi');
   const [musicVolume, setMusicVolume] = useState(0.5);
   
-  // Current task being studied
+  //  Global audio
+  const audioRef = useRef(null);
+  const [currentTrackUrl, setCurrentTrackUrl] = useState(null);
+  
   const [currentTask, setCurrentTask] = useState(null);
   
   // Focus Timer
@@ -18,18 +21,60 @@ export const StudyModeProvider = ({ children }) => {
   const [sessionCount, setSessionCount] = useState(0);
   const [isBreak, setIsBreak] = useState(false);
   
-  // Doubt counter
   const [doubtsAsked, setDoubtsAsked] = useState(0);
-  
-  // Study session tracking
   const [studyStartTime, setStudyStartTime] = useState(null);
   const [totalStudyTime, setTotalStudyTime] = useState(0);
 
-  // ─── Restore session from localStorage on mount ───
+  
+  useEffect(() => {
+    if (!audioRef.current) {
+      audioRef.current = new Audio();
+      audioRef.current.loop = true;
+      audioRef.current.volume = musicVolume;
+    }
+    
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
+    };
+  }, []);
+
+  
+  useEffect(() => {
+    if (!audioRef.current) return;
+    
+    if (isMusicPlaying && currentTrackUrl) {
+      audioRef.current.play().catch((err) => {
+        console.log('Audio play failed:', err);
+      });
+    } else {
+      audioRef.current.pause();
+    }
+  }, [isMusicPlaying, currentTrackUrl]);
+
+  
+  useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.volume = musicVolume;
+    }
+  }, [musicVolume]);
+
+  
+  const playTrack = (trackUrl) => {
+    if (!audioRef.current) return;
+    
+    if (currentTrackUrl !== trackUrl) {
+      audioRef.current.src = trackUrl;
+      setCurrentTrackUrl(trackUrl);
+    }
+    setIsMusicPlaying(true);
+  };
+
+  // Restore session from localStorage
   useEffect(() => {
     const saved = localStorage.getItem('studySession');
-    console.log('🔄 Checking for saved session:', saved ? 'found' : 'none');
-    
     if (saved) {
       try {
         const data = JSON.parse(saved);
@@ -38,8 +83,6 @@ export const StudyModeProvider = ({ children }) => {
           const elapsed = Math.floor((now - data.savedAt) / 1000);
           
           if (elapsed < 7200) {
-            console.log('✅ Restoring session, elapsed:', elapsed, 'seconds');
-            
             setIsStudyMode(true);
             setCurrentTask(data.currentTask);
             setTimerDuration(data.timerDuration);
@@ -51,16 +94,11 @@ export const StudyModeProvider = ({ children }) => {
             if (data.timerActive) {
               const newTimeLeft = Math.max(0, data.timeLeft - elapsed);
               setTimeLeft(newTimeLeft);
-              if (newTimeLeft > 0) {
-                setTimerActive(true);
-                console.log('⏱️ Timer resumed at:', newTimeLeft);
-              }
+              if (newTimeLeft > 0) setTimerActive(true);
             } else {
               setTimeLeft(data.timeLeft);
-              console.log('⏸ Timer was paused at:', data.timeLeft);
             }
           } else {
-            console.log('⏰ Session too old, clearing');
             localStorage.removeItem('studySession');
           }
         }
@@ -71,26 +109,19 @@ export const StudyModeProvider = ({ children }) => {
     }
   }, []);
 
-  // ─── Save session to localStorage when active ───
+  // Save session
   useEffect(() => {
     if (isStudyMode && currentTask) {
       const data = {
-        isStudyMode,
-        currentTask,
-        timerActive,
-        timerDuration,
-        timeLeft,
-        sessionCount,
-        isBreak,
-        doubtsAsked,
-        studyStartTime,
+        isStudyMode, currentTask, timerActive, timerDuration, timeLeft,
+        sessionCount, isBreak, doubtsAsked, studyStartTime,
         savedAt: Date.now(),
       };
       localStorage.setItem('studySession', JSON.stringify(data));
     }
   }, [isStudyMode, currentTask, timerActive, timerDuration, timeLeft, sessionCount, isBreak, doubtsAsked, studyStartTime]);
 
-  // ─── Timer countdown logic ───
+  // Timer countdown
   useEffect(() => {
     let interval = null;
     if (timerActive && timeLeft > 0) {
@@ -103,24 +134,18 @@ export const StudyModeProvider = ({ children }) => {
     return () => clearInterval(interval);
   }, [timerActive, timeLeft]);
 
-  // ─── Enter study mode (idempotent) ───
   const enterStudyMode = (task = null) => {
     if (isStudyMode) {
       if (task) setCurrentTask(task);
-      console.log("📚 Already in study mode, not resetting");
       return;
     }
-    
-    console.log("🎯 Starting fresh study session");
     setIsStudyMode(true);
     setCurrentTask(task);
     setStudyStartTime(Date.now());
     setDoubtsAsked(0);
   };
 
-  // ─── Exit study mode ───
   const exitStudyMode = () => {
-    console.log('🛑 Exiting study mode');
     if (studyStartTime) {
       const sessionDuration = Math.floor((Date.now() - studyStartTime) / 1000);
       setTotalStudyTime((prev) => prev + sessionDuration);
@@ -134,20 +159,12 @@ export const StudyModeProvider = ({ children }) => {
     localStorage.removeItem('studySession');
   };
 
-  // ─── Music controls ───
   const toggleMusic = () => setIsMusicPlaying((prev) => !prev);
   const changeMusic = (type) => setCurrentMusic(type);
   const changeVolume = (vol) => setMusicVolume(vol);
 
-
-  // ─── Timer controls ───
   const startTimer = (minutes = 25, force = false) => {
-    if (timerActive && !force) {
-      console.log("⏱️ Timer already running, not restarting");
-      return;
-    }
-    
-    console.log(`⏱️ Starting timer for ${minutes} minutes`);
+    if (timerActive && !force) return;
     const seconds = minutes * 60;
     setTimerDuration(seconds);
     setTimeLeft(seconds);
@@ -155,24 +172,20 @@ export const StudyModeProvider = ({ children }) => {
     setIsBreak(false);
   };
 
-  // ⭐ Set custom focus duration (without starting)
   const setFocusDuration = (minutes) => {
     const seconds = minutes * 60;
     setTimerDuration(seconds);
     setTimeLeft(seconds);
     setTimerActive(false);
     setIsBreak(false);
-    console.log(`⏱️ Focus duration set to ${minutes} minutes`);
   };
 
-  // ⭐ Set custom break duration (without starting)
   const setBreakDuration = (minutes) => {
     const seconds = minutes * 60;
     setTimerDuration(seconds);
     setTimeLeft(seconds);
     setTimerActive(false);
     setIsBreak(true);
-    console.log(`☕ Break duration set to ${minutes} minutes`);
   };
 
   const pauseTimer = () => setTimerActive(false);
@@ -184,7 +197,6 @@ export const StudyModeProvider = ({ children }) => {
     setTimeLeft(timerDuration);
   };
 
-  // Skip to next session/break
   const skipSession = () => {
     setTimerActive(false);
     if (isBreak) {
@@ -199,7 +211,6 @@ export const StudyModeProvider = ({ children }) => {
     }
   };
 
-  // Increment doubt counter
   const incrementDoubts = () => setDoubtsAsked((prev) => prev + 1);
 
   const handleTimerComplete = () => {
@@ -223,53 +234,21 @@ export const StudyModeProvider = ({ children }) => {
     }
   };
 
-  // Format time as MM:SS
   const formatTime = (seconds) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
-  // ─── Context value (ALL functions defined above) ───
   const value = {
-    // Study Mode
-    isStudyMode,
-    enterStudyMode,
-    exitStudyMode,
-    currentTask,
-    setCurrentTask,
-    
-    // Music
-    isMusicPlaying,
-    currentMusic,
-    musicVolume,
-    toggleMusic,
-    changeMusic,
-    changeVolume,
-    
-    // Timer
-    timerActive,
-    timerDuration,
-    timeLeft,
-    sessionCount,
-    isBreak,
-    startTimer,
-    pauseTimer,
-    resumeTimer,
-    toggleTimer,
-    resetTimer,
-    skipSession,
-    formatTime,
-    setFocusDuration,    // ⭐ NEW
-    setBreakDuration,    // ⭐ NEW
-    
-    // Doubts
-    doubtsAsked,
-    incrementDoubts,
-    
-    // Stats
-    totalStudyTime,
-    studyStartTime,
+    isStudyMode, enterStudyMode, exitStudyMode, currentTask, setCurrentTask,
+    isMusicPlaying, currentMusic, musicVolume, toggleMusic, changeMusic, changeVolume,
+    currentTrackUrl, playTrack,  
+    timerActive, timerDuration, timeLeft, sessionCount, isBreak,
+    startTimer, pauseTimer, resumeTimer, toggleTimer, resetTimer, skipSession, formatTime,
+    setFocusDuration, setBreakDuration,
+    doubtsAsked, incrementDoubts,
+    totalStudyTime, studyStartTime,
   };
 
   return (

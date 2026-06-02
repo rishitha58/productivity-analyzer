@@ -1,15 +1,8 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Music,
-  Play,
-  Pause,
-  Volume2,
-  VolumeX,
-  SkipForward,
-  SkipBack,
-  Disc3,
-  Headphones,
+  Music, Play, Pause, Volume2, VolumeX,
+  SkipForward, SkipBack, Disc3, Headphones,
 } from 'lucide-react';
 import { useStudyMode } from '../../context/StudyModeContext';
 
@@ -21,7 +14,6 @@ const tracks = [
     emoji: '🎧',
     color: 'from-lavender-300 to-babyBlue-300',
     bgColor: 'bg-lavender-100',
-    // Free streaming URL - replace with actual audio files
     url: "/music/lofi.mp3",
   },
   {
@@ -61,43 +53,39 @@ const MusicPlayer = ({ compact = false }) => {
     toggleMusic,
     changeMusic,
     changeVolume,
+    playTrack,  
   } = useStudyMode();
 
   const [isExpanded, setIsExpanded] = useState(!compact);
   const [isMuted, setIsMuted] = useState(false);
-  const audioRef = useRef(null);
 
   const currentTrack = tracks.find((t) => t.id === currentMusic) || tracks[0];
 
-  // Handle audio playback
-  useEffect(() => {
-    if (!audioRef.current) return;
-    if (isMusicPlaying) {
-      audioRef.current.play().catch((err) => {
-        console.log('Audio play failed:', err);
-      });
-    } else {
-      audioRef.current.pause();
-    }
-  }, [isMusicPlaying, currentMusic]);
+  
+  const handleTrackSelect = (track) => {
+    changeMusic(track.id);
+    playTrack(track.url);  
+  };
 
-  // Handle volume
-  useEffect(() => {
-    if (audioRef.current) {
-      audioRef.current.volume = isMuted ? 0 : musicVolume;
+  
+  const handlePlayPause = () => {
+    if (!isMusicPlaying) {
+      playTrack(currentTrack.url);
+    } else {
+      toggleMusic();
     }
-  }, [musicVolume, isMuted]);
+  };
 
   const handleNext = () => {
     const currentIdx = tracks.findIndex((t) => t.id === currentMusic);
     const nextTrack = tracks[(currentIdx + 1) % tracks.length];
-    changeMusic(nextTrack.id);
+    handleTrackSelect(nextTrack);
   };
 
   const handlePrev = () => {
     const currentIdx = tracks.findIndex((t) => t.id === currentMusic);
     const prevTrack = tracks[(currentIdx - 1 + tracks.length) % tracks.length];
-    changeMusic(prevTrack.id);
+    handleTrackSelect(prevTrack);
   };
 
   return (
@@ -106,13 +94,10 @@ const MusicPlayer = ({ compact = false }) => {
       animate={{ opacity: 1, scale: 1 }}
       className="bg-white/70 backdrop-blur-lg rounded-3xl shadow-soft border border-white/40 overflow-hidden"
     >
-      {/* Hidden audio element */}
-      <audio ref={audioRef} loop src={currentTrack.url} />
+      
 
-      {/* Compact header */}
       <div className="p-5">
         <div className="flex items-center gap-3">
-          {/* Animated disc */}
           <motion.div
             animate={{ rotate: isMusicPlaying ? 360 : 0 }}
             transition={{
@@ -125,7 +110,6 @@ const MusicPlayer = ({ compact = false }) => {
             <Disc3 size={26} className="text-white" />
           </motion.div>
 
-          {/* Track info */}
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
               <h3 className="font-display font-bold text-gray-800 truncate">
@@ -153,7 +137,6 @@ const MusicPlayer = ({ compact = false }) => {
             </p>
           </div>
 
-          {/* Expand button */}
           {compact && (
             <button
               onClick={() => setIsExpanded(!isExpanded)}
@@ -178,7 +161,7 @@ const MusicPlayer = ({ compact = false }) => {
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            onClick={toggleMusic}
+            onClick={handlePlayPause}
             className={`p-4 rounded-2xl bg-gradient-to-br ${currentTrack.color} text-white shadow-medium hover:shadow-glow transition-all`}
           >
             {isMusicPlaying ? (
@@ -201,7 +184,10 @@ const MusicPlayer = ({ compact = false }) => {
         {/* Volume control */}
         <div className="flex items-center gap-3 mt-4">
           <button
-            onClick={() => setIsMuted(!isMuted)}
+            onClick={() => {
+              setIsMuted(!isMuted);
+              changeVolume(isMuted ? 0.5 : 0);
+            }}
             className="p-1 hover:bg-lavender-100 rounded-lg transition-colors"
           >
             {isMuted || musicVolume === 0 ? (
@@ -254,7 +240,7 @@ const MusicPlayer = ({ compact = false }) => {
                     key={track.id}
                     whileHover={{ scale: 1.03, y: -2 }}
                     whileTap={{ scale: 0.97 }}
-                    onClick={() => changeMusic(track.id)}
+                    onClick={() => handleTrackSelect(track)}
                     className={`p-3 rounded-xl text-left transition-all ${
                       currentMusic === track.id
                         ? `bg-gradient-to-br ${track.color} text-white shadow-soft`

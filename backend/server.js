@@ -39,7 +39,7 @@ app.use("/api/tests", testsRoutes);
 app.use("/api/doubts", doubtsRoutes);
 app.use("/api/chat", chatRoutes);
 app.use("/api/notifications", notificationRoutes);
-app.use("/api/travel", travelRoutes);  // 🆕 ADD THIS
+app.use("/api/travel", travelRoutes);  
 
 // Error handler
 app.use((err, req, res, next) => {
