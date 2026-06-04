@@ -1,69 +1,64 @@
-# 🌸 Productivity Analyzer
+#  Productivity Analyzer
 
 > An AI-powered productivity & study companion built with React, Node.js, and dual-AI architecture (Groq + Gemini).
 
-![Status](https://img.shields.io/badge/Status-Active-success)
-![Tech](https://img.shields.io/badge/Stack-MERN-blue)
-![AI](https://img.shields.io/badge/AI-Groq%20%2B%20Gemini-purple)
-![License](https://img.shields.io/badge/License-MIT-green)
-
 A full-stack productivity application designed for students. Built as a 3rd year B.E. mini project, featuring AI-powered task extraction, focus mode with persistent timer, mock tests, and intelligent file processing.
 
-## ✨ Features
+##  Features
 
-### 📝 Smart Journal
+###  Smart Journal
 - Write naturally → AI converts to structured tasks
 - Goal-aligned task suggestions
 - Streak tracking & daily motivation
 
-### 🎯 Goal Roadmap
+###  Goal Roadmap
 - Long-term goals broken into phases & milestones
 - AI-generated personalized study plans
 - Progress visualization
 
-### 🧠 Focus Mode
+###  Focus Mode
 - Customizable Pomodoro timer (15/25/45/60 min presets)
 - **Floating widget** that persists across pages
 - Local music player (Lo-fi, Rain, Nature, Piano)
 - AI doubt solver with beautiful markdown rendering
 - Auto-save session state
 
-### 📝 Mock Tests
+###  Mock Tests
 - Generate from any topic
 - From focus mode doubts
 - From your saved notes
 - Multi-choice questions with explanations
 
-### 💡 Key Points Extraction
+###  Key Points Extraction
 - From topic names
 - From pasted text
 - From your notes (multi-select)
 - **From uploaded PDF/TXT files** (multiple files)
 
-### 💬 AI Chat Assistant
+###  AI Chat Assistant
 - Powered by Groq (Llama 3.3) for speed
 - Personalized based on user goals
 - Markdown formatting support
 - Smart fallback to Gemini
 
-### 📊 Smart History
+###  Smart History
 - 3-way undone task handler (Did it / Add today / Skip)
 - Visual status badges (completed late, skipped, carried forward)
 - Automatic deduplication
 - Daily completion analytics
 
-### 🚗 Travel Reminders
+###  Travel Reminders
 - Auto-extract from journal
 - Mode-aware (driving/walking/cycling)
 - Smart departure time calculations
 
-### 📈 Additional Features
+###  Additional Features
 - Mistakes tracking from mock tests
 - Productivity insights & analytics
 - Sleep schedule tracking
 - Smart notifications system
 
-## 🛠️ Tech Stack
+##  Tech Stack
 
 ### **Frontend**
 - React 18 + Vite
@@ -86,7 +81,7 @@ A full-stack productivity application designed for students. Built as a 3rd year
 - **Gemini 2.5 Flash** — Structured JSON tasks (250 req/day)
 - Intelligent fallback system for reliability
 
-## 🚀 Setup Instructions
+##  Setup Instructions
 
 ### Prerequisites
 
@@ -95,8 +90,36 @@ A full-stack productivity application designed for students. Built as a 3rd year
 - Gemini API key — [Get free key](https://aistudio.google.com/apikey)
 - Groq API key — [Get free key](https://console.groq.com/keys)
 
-### 1. Clone Repository
+### Clone Repository
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/productivity-analyzer.git
+git clone https://github.com/rishitha58/productivity-analyzer.git
 cd productivity-analyzer
+
+productivity-analyzer/
+├── backend/
+│   ├── config/         # Database connection
+│   ├── middleware/     # Auth middleware
+│   ├── models/         # MongoDB schemas (10 models)
+│   ├── routes/         # API routes (11 route files)
+│   ├── services/       # AI services (aiService.js, groqService.js)
+│   ├── server.js       # Express server entry
+│   └── .env            # Environment variables (not in git)
+│
+├── frontend/
+│   ├── public/
+│   │   └── music/      # Local music files
+│   ├── src/
+│   │   ├── components/ # Reusable UI components
+│   │   │   ├── ai/
+│   │   │   ├── common/
+│   │   │   ├── study/
+│   │   │   └── ChatWidget.jsx
+│   │   ├── context/    # Global state (StudyMode, Theme, etc.)
+│   │   ├── hooks/      # Custom hooks
+│   │   ├── pages/      # Page components
+│   │   ├── services/   # API service layer
+│   │   └── App.jsx     # Root component
+│   └── ...
+│
+└── README.md
