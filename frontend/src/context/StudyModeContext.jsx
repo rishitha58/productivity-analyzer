@@ -73,42 +73,51 @@ export const StudyModeProvider = ({ children }) => {
   };
 
   // Restore session from localStorage
-  useEffect(() => {
-    const saved = localStorage.getItem('studySession');
-    if (saved) {
-      try {
-        const data = JSON.parse(saved);
-        if (data.isStudyMode && data.currentTask) {
-          const now = Date.now();
-          const elapsed = Math.floor((now - data.savedAt) / 1000);
+ useEffect(() => {
+  const token = localStorage.getItem('token'); // ⭐ Check if logged in
+  const saved = localStorage.getItem('studySession');
+  
+  //  If no token (logged out), clear any saved session
+  if (!token) {
+    localStorage.removeItem('studySession');
+    return;
+  }
+  
+  if (saved) {
+    try {
+      const data = JSON.parse(saved);
+      if (data.isStudyMode && data.currentTask) {
+        const now = Date.now();
+        const elapsed = Math.floor((now - data.savedAt) / 1000);
+        
+        //  Auto-clear if more than 1 hour
+        if (elapsed < 3600) {
+          setIsStudyMode(true);
+          setCurrentTask(data.currentTask);
+          setTimerDuration(data.timerDuration);
+          setSessionCount(data.sessionCount || 0);
+          setIsBreak(data.isBreak || false);
+          setDoubtsAsked(data.doubtsAsked || 0);
+          setStudyStartTime(data.studyStartTime);
           
-          if (elapsed < 7200) {
-            setIsStudyMode(true);
-            setCurrentTask(data.currentTask);
-            setTimerDuration(data.timerDuration);
-            setSessionCount(data.sessionCount || 0);
-            setIsBreak(data.isBreak || false);
-            setDoubtsAsked(data.doubtsAsked || 0);
-            setStudyStartTime(data.studyStartTime);
-            
-            if (data.timerActive) {
-              const newTimeLeft = Math.max(0, data.timeLeft - elapsed);
-              setTimeLeft(newTimeLeft);
-              if (newTimeLeft > 0) setTimerActive(true);
-            } else {
-              setTimeLeft(data.timeLeft);
-            }
+          if (data.timerActive) {
+            const newTimeLeft = Math.max(0, data.timeLeft - elapsed);
+            setTimeLeft(newTimeLeft);
+            if (newTimeLeft > 0) setTimerActive(true);
           } else {
-            localStorage.removeItem('studySession');
+            setTimeLeft(data.timeLeft);
           }
+        } else {
+          console.log('⏰ Session too old, clearing');
+          localStorage.removeItem('studySession');
         }
-      } catch (e) {
-        console.error('Failed to restore study session:', e);
-        localStorage.removeItem('studySession');
       }
+    } catch (e) {
+      console.error('Failed to restore study session:', e);
+      localStorage.removeItem('studySession');
     }
-  }, []);
-
+  }
+}, []);
   // Save session
   useEffect(() => {
     if (isStudyMode && currentTask) {

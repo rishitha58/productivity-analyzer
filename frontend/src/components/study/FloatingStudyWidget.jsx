@@ -25,10 +25,11 @@ const FloatingStudyWidget = () => {
 
   const [isExpanded, setIsExpanded] = useState(false);
 
-  // Don't show on Focus Mode page itself
-  const isOnFocusPage = location.pathname.startsWith("/focus");
-  
-  if (!isStudyMode || isOnFocusPage || !currentTask) return null;
+const hiddenPaths = ["/", "/journal"];
+const isOnFocusPage = location.pathname.startsWith("/focus");
+const isOnHiddenPage = hiddenPaths.includes(location.pathname);
+
+if (!isStudyMode || isOnFocusPage || isOnHiddenPage || !currentTask) return null;
 
   // Color based on time left
   const getTimerColor = () => {
@@ -228,9 +229,8 @@ const FloatingStudyWidget = () => {
             <motion.button
               whileHover={{ scale: 1.02 }}
               onClick={() => {
-                if (confirm("Exit focus session?")) {
+    
                   exitStudyMode();
-                }
               }}
               className="w-full mt-3 py-2 rounded-xl text-xs text-gray-500 hover:bg-gray-50 transition-colors"
             >
